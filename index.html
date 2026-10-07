@@ -1,1 +1,192 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LINKCAM</title><script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script><style>body{margin:0;font-family:system-ui,sans-serif;background:#07111f;color:#fff;min-height:100vh}main{max-width:720px;margin:auto;padding:24px 16px}.card{background:#101d30;border:1px solid #263a55;border-radius:18px;padding:20px;margin:14px 0}h1{font-size:34px;margin:0}.sub{opacity:.7;margin:5px 0 24px}input,button{width:100%;box-sizing:border-box;padding:14px;border-radius:12px;border:1px solid #334963;background:#091524;color:#fff;font-size:16px}button{margin-top:10px;background:#1d6cff;border:0;font-weight:700}.hidden{display:none}.status{margin-top:12px;line-height:1.5}.qr{background:#fff;padding:14px;width:max-content;margin:18px auto;border-radius:12px}.video{width:100%;background:#000;border-radius:14px;max-height:70vh}.back{background:#24344b}.small{font-size:13px;opacity:.65}.reader{margin-top:16px;border-radius:14px;overflow:hidden}</style></head><body><main><h1>LINKCAM</h1><div class="sub">iPadをカメラにして、スマホ・PCから見る</div><section id="home" class="card"><button onclick="show('camera')">この端末をカメラにする</button><button onclick="show('viewer')">カメラ映像を見る</button></section><section id="camera" class="card hidden"><h2>カメラ登録</h2><input id="camName" placeholder="例：iPad・リビング"><button onclick="startCamera()">登録してカメラ開始</button><div id="camStatus" class="status"></div><div id="qr" class="qr hidden"></div><div class="small">このQRを「カメラ映像を見る」側で読み取ります。</div><button class="back" onclick="show('home')">戻る</button></section><section id="viewer" class="card hidden"><h2>カメラを見る</h2><button onclick="startScanner()">📷 QRコードを読み取る</button><div id="reader" class="reader hidden"></div><div id="viewStatus" class="status"></div><video id="remote" class="video" autoplay playsinline controls></video><button class="back" onclick="stopScanner();show('home')">戻る</button></section></main><script>let peer=null,stream=null,scanner=null,call=null;const $=id=>document.getElementById(id);const ice={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:stun.cloudflare.com:3478'}]};function show(which){['home','camera','viewer'].forEach(x=>$(x).classList.toggle('hidden',x!==which));if(which!=='viewer')stopScanner()}function makeQR(id,name){$('qr').innerHTML='';new QRCode($('qr'),{text:'LINKCAM|1|'+id+'|'+encodeURIComponent(name),width:220,height:220});$('qr').classList.remove('hidden')}async function startCamera(){const name=$('camName').value.trim()||'iPad';$('camStatus').textContent='カメラを起動しています…';try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});peer=new Peer(undefined,{config:ice});peer.on('open',id=>{makeQR(id,name);$('camStatus').textContent='「'+name+'」として待機中。QRを読み取ってください。'});peer.on('call',c=>{c.answer(stream);$('camStatus').textContent='「'+name+'」が映像を送信中';});peer.on('error',e=>$('camStatus').textContent='接続エラー: '+e.type)}catch(e){$('camStatus').textContent='カメラを使用できません: '+e.message}}function startScanner(){stopScanner();$('reader').classList.remove('hidden');$('viewStatus').textContent='LINKCAMのQRコードを映してください。';scanner=new Html5Qrcode('reader');scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250}},decoded=>{if(!decoded.startsWith('LINKCAM|1|')){ $('viewStatus').textContent='これはLINKCAMのQRコードではありません。';return}const p=decoded.split('|');if(p.length<4){$('viewStatus').textContent='QR情報が壊れています。';return}const id=p[2],name=decodeURIComponent(p.slice(3).join('|'));stopScanner();connectViewer(id,name)},()=>{}).catch(e=>$('viewStatus').textContent='QR読み取りを開始できません: '+e)}function stopScanner(){if(scanner){scanner.stop().catch(()=>{});scanner.clear().catch(()=>{});scanner=null}$('reader').classList.add('hidden')}function connectViewer(id,name){$('viewStatus').textContent='「'+name+'」に接続しています…';peer=new Peer(undefined,{config:ice});peer.on('open',()=>{call=peer.call(id,stream||new MediaStream());if(!call){$('viewStatus').textContent='映像接続を開始できませんでした。';return}call.on('stream',s=>{$('remote').srcObject=s;$('viewStatus').textContent='「'+name+'」に接続しました';$('remote').play().catch(()=>{})});call.on('close',()=>$('viewStatus').textContent='接続が切れました');call.on('error',e=>$('viewStatus').textContent='映像接続エラー: '+e)});peer.on('error',e=>$('viewStatus').textContent='接続エラー: '+e.type)} </script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LINKCAM</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#07111f;color:#eef5ff;font-family:system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:28px 18px}h1{letter-spacing:.08em}
+.card{background:#0d1b2d;border:1px solid #203652;border-radius:18px;padding:20px;margin:14px 0}
+button,input{font:inherit;border-radius:12px;padding:13px;border:1px solid #35506e}
+button{background:#17385c;color:white;cursor:pointer;margin:6px 4px 6px 0}input{background:#081522;color:white;width:100%}
+video{width:100%;background:#000;border-radius:14px;display:block;margin-top:12px}
+#qr{background:white;padding:12px;width:max-content;margin:14px auto}
+.small{opacity:.72;font-size:.9rem}.ok{color:#8ff0b2}.err{color:#ff9c9c}
+.hidden{display:none}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body><main>
+<h1>LINKCAM</h1>
+<p class="small">自分の端末・許可を得た端末だけで使用してください。</p>
+
+<div id="home" class="card">
+<button onclick="show('camera')">📷 カメラとして登録</button>
+<button onclick="show('viewer')">👁 映像を見る</button>
+</div>
+
+<section id="camera" class="card hidden">
+<h2>カメラ端末</h2>
+<input id="camName" placeholder="例：iPad・リビング">
+<button onclick="startCamera()">登録してカメラ開始</button>
+<p id="camStatus" class="small"></p>
+<video id="local" autoplay muted playsinline class="hidden"></video>
+<div id="qr"></div>
+<p id="camInfo" class="small"></p>
+</section>
+
+<section id="viewer" class="card hidden">
+<h2>映像を見る</h2>
+<button onclick="startScanner()">📷 QRコードを読み取る</button>
+<div id="reader"></div>
+<p id="viewStatus" class="small"></p>
+<video id="remote" autoplay playsinline controls></video>
+</section>
+</main>
+
+<script>
+/*
+  Firebase Consoleで作ったWebアプリの設定をここへ入れてください。
+  この設定値はWebアプリ用の公開設定ですが、Firestore/Authのルールを必ず下記README通りにしてください。
+*/
+const firebaseConfig = {
+  apiKey: "AIzaSyAKOIw9-fyta0mwYvCKseIK_fd2zbT6Cno",
+  authDomain: "linkcam.firebaseapp.com",
+  projectId: "linkcam",
+  storageBucket: "linkcam.firebasestorage.app",
+  messagingSenderId: "244866100842",
+  appId: "1:244866100842:web:24a20bb607d48f263f6413",
+  measurementId: "G-HHH2YQ91RL"
+};
+
+let db, auth, uid, localStream, pc, role, roomId, unsubscribe;
+const ICE = [{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}];
+
+function configured(){return !Object.values(firebaseConfig).some(v=>String(v).startsWith("YOUR_"))}
+function show(id){document.querySelectorAll("section").forEach(x=>x.classList.add("hidden"));document.getElementById(id).classList.remove("hidden")}
+function setStatus(id,msg,err=false){const e=document.getElementById(id);e.textContent=msg;e.className="small "+(err?"err":"ok")}
+
+async function init(){
+ if(!configured()){setStatus("viewStatus","Firebase設定がまだ入っていません。READMEの初回設定を行ってください。",true);return}
+ firebase.initializeApp(firebaseConfig); auth=firebase.auth(); db=firebase.firestore();
+ await auth.signInAnonymously(); uid=auth.currentUser.uid;
+}
+init().catch(e=>console.error(e));
+
+function newId(){return crypto.randomUUID().replaceAll("-","").slice(0,20)}
+
+async function startCamera(){
+ if(!configured()) return setStatus("camStatus","Firebase設定が必要です。READMEを確認してください。",true);
+ role="camera"; roomId=newId();
+ try{
+  localStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});
+  const v=document.getElementById("local");v.srcObject=localStream;v.classList.remove("hidden");
+  const name=document.getElementById("camName").value.trim()||"カメラ";
+  await db.collection("rooms").doc(roomId).set({name,createdAt:firebase.firestore.FieldValue.serverTimestamp(),cameraUid:uid,state:"waiting"});
+  new QRCode(document.getElementById("qr"),{text:JSON.stringify({v:"LINKCAM1",room:roomId,name}),width:220,height:220});
+  document.getElementById("camInfo").textContent=`端末名：${name}　接続待機中`;
+  setStatus("camStatus","カメラ起動済み。QRコードを読み取ってください。");
+  watchViewer();
+ }catch(e){setStatus("camStatus","カメラを開始できません："+e.message,true)}
+}
+
+function watchViewer(){
+ unsubscribe=db.collection("rooms").doc(roomId).collection("events").where("type","==","offer").onSnapshot(async snap=>{
+  for(const change of snap.docChanges()){
+   if(change.type!=="added") continue;
+   const data=change.doc.data(); if(data.handled) continue;
+   await change.doc.ref.update({handled:true});
+   await answerOffer(data);
+  }
+ });
+}
+
+async function waitIceGathering(pc, timeout=8000){
+  if(pc.iceGatheringState==="complete") return;
+  await new Promise(resolve=>{
+    let done=false;
+    const finish=()=>{if(done)return;done=true;pc.removeEventListener("icegatheringstatechange",check);clearTimeout(timer);resolve()};
+    const check=()=>{if(pc.iceGatheringState==="complete")finish()};
+    const timer=setTimeout(finish,timeout);
+    pc.addEventListener("icegatheringstatechange",check);
+  });
+}
+
+async function answerOffer(data){
+ pc=new RTCPeerConnection({iceServers:ICE});
+ localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+
+ pc.onconnectionstatechange=()=>{
+   if(pc.connectionState==="connected") setStatus("camStatus","視聴端末へ映像を送信中");
+   if(["failed","disconnected"].includes(pc.connectionState))
+     setStatus("camStatus","WebRTC接続に失敗しました。別ネットワークではTURNが必要な場合があります。",true);
+ };
+
+ await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+ for(const c of (data.candidates||[])){
+   try{ await pc.addIceCandidate(c); }catch(e){}
+ }
+
+ const answer=await pc.createAnswer();
+ await pc.setLocalDescription(answer);
+ await waitIceGathering(pc);
+
+ const candidates=[];
+ // ICE candidates are already included in the SDP after gathering.
+ // Keep the array for compatibility with the viewer.
+ await db.collection("rooms").doc(roomId).collection("events").add({
+   type:"answer",
+   to:data.from,
+   answer:{type:pc.localDescription.type,sdp:pc.localDescription.sdp},
+   candidates
+ });
+ setStatus("camStatus","視聴端末へ映像を送信中");
+}
+
+async function startScanner(){
+ if(!configured()) return setStatus("viewStatus","Firebase設定が必要です。READMEを確認してください。",true);
+ const scanner=new Html5Qrcode("reader");
+ setStatus("viewStatus","QRコードをカメラに映してください。");
+ let scanned=false;
+ await scanner.start({facingMode:"environment"},{fps:10,qrbox:250},async text=>{
+  if(scanned) return;
+  scanned=true;
+  try{
+   const x=JSON.parse(text);if(x.v!=="LINKCAM1") throw new Error("LINKCAMのQRではありません");
+   await scanner.stop();document.getElementById("reader").innerHTML="";
+   await connectViewer(x.room,x.name);
+  }catch(e){setStatus("viewStatus",e.message,true)}
+ });
+}
+
+async function connectViewer(id,name){
+ roomId=id;setStatus("viewStatus",`${name} に接続しています…`);
+ pc=new RTCPeerConnection({iceServers:ICE});
+ pc.ontrack=e=>{document.getElementById("remote").srcObject=e.streams[0];setStatus("viewStatus",`${name} に接続しました`)}
+ pc.onconnectionstatechange=()=>{if(["failed","disconnected"].includes(pc.connectionState))setStatus("viewStatus","WebRTC接続に失敗しました。別ネットワークではTURNが必要な場合があります。",true)}
+ const offer=await pc.createOffer({offerToReceiveVideo:true});
+ await pc.setLocalDescription(offer);
+ await waitIceGathering(pc);
+ await db.collection("rooms").doc(roomId).collection("events").add({
+   type:"offer",
+   from:uid,
+   offer:{type:pc.localDescription.type,sdp:pc.localDescription.sdp},
+   candidates:[]
+ });
+ const unsub=db.collection("rooms").doc(roomId).collection("events").where("type","==","answer").onSnapshot(async snap=>{
+  for(const change of snap.docChanges()){
+   const d=change.doc.data();if(d.to!==uid||d.used)continue;
+   await change.doc.ref.update({used:true});
+   await pc.setRemoteDescription(new RTCSessionDescription(d.answer));
+   for(const c of (d.candidates||[])){try{await pc.addIceCandidate(c)}catch{}}
+   unsub();
+  }
+ });
+}
+</script>
+</body></html>
