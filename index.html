@@ -3,100 +3,128 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07111f">
 <title>LINKCAM</title>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:#06101d;color:#f5f8ff}body{min-height:100vh}button,input{font:inherit}.wrap{width:min(760px,100%);margin:auto;padding:24px 16px 40px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}.brand{font-size:30px;font-weight:900;letter-spacing:2px}.pill{font-size:12px;color:#8fa5bf;border:1px solid #20334c;border-radius:999px;padding:7px 10px}.card{background:linear-gradient(180deg,#0e1c2d,#0b1727);border:1px solid #1e3149;border-radius:22px;padding:22px;box-shadow:0 12px 40px #0004;margin-bottom:16px}h1,h2,h3{margin:0 0 10px}h2{font-size:22px}.sub{color:#9eb0c4;line-height:1.6}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}.btn{width:100%;border:0;border-radius:15px;padding:16px 14px;background:#1d6cff;color:#fff;font-weight:800;cursor:pointer}.btn.secondary{background:#16283d;border:1px solid #29405c}.btn.danger{background:#52202b}.btn:disabled{opacity:.45;cursor:not-allowed}.field{margin-top:14px}.field label{display:block;font-size:13px;color:#9eb0c4;margin:0 0 7px}input{width:100%;padding:14px 15px;border-radius:13px;border:1px solid #2b405a;background:#071321;color:#fff;outline:none}input:focus{border-color:#4c8cff}.status{margin-top:14px;padding:12px 14px;border-radius:12px;background:#071321;color:#a9bad0;line-height:1.5}.code{margin-top:14px;padding:18px;border-radius:16px;background:#050c15;border:1px solid #233a56;text-align:center;font-size:28px;font-weight:900;letter-spacing:3px;word-break:break-all}.hidden{display:none!important}.videoWrap{position:relative;background:#000;border-radius:18px;overflow:hidden;aspect-ratio:16/9;margin-top:16px}.video{width:100%;height:100%;object-fit:contain;background:#000}.cameraBlank{height:180px;border-radius:18px;background:#02070d;display:flex;align-items:center;justify-content:center;color:#6e8198;margin-top:16px;text-align:center}.list{display:grid;gap:10px;margin-top:14px}.device{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border:1px solid #243a54;border-radius:15px;background:#091625}.device b{display:block}.device span{font-size:12px;color:#8195ab}.device .mini{width:auto;margin:0;padding:10px 13px}.note{font-size:12px;color:#74879c;line-height:1.6;margin-top:14px}.back{margin-bottom:14px}.empty{color:#8195ab;padding:10px 0}.ok{color:#7ce0a3}.warn{color:#ffd27a}.err{color:#ff8d9d}@media(max-width:600px){.wrap{padding:18px 12px 30px}.grid{grid-template-columns:1fr}.brand{font-size:26px}.card{padding:18px}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#07111f;color:#fff;min-height:100vh}main{width:min(760px,100%);margin:auto;padding:28px 18px 48px}h1{font-size:36px;margin:0 0 4px;letter-spacing:.04em}.sub{opacity:.68;margin-bottom:24px}.card{background:#101d30;border:1px solid #22334b;border-radius:20px;padding:20px;margin:14px 0;box-shadow:0 12px 35px #0003}h2{margin-top:0}input,button{width:100%;padding:14px 15px;border-radius:12px;border:1px solid #334963;background:#091524;color:#fff;font-size:16px}button{margin-top:10px;background:#1d6cff;border:0;font-weight:700;cursor:pointer}button.secondary{background:#18283e}button:disabled{opacity:.45}.hidden{display:none}.status{margin-top:12px;line-height:1.6}.code{font-size:22px;letter-spacing:2px;font-weight:800;text-align:center;padding:16px;margin-top:12px;background:#091524;border-radius:12px;word-break:break-all}.video{display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#000;border-radius:14px;margin-top:16px}.small{font-size:13px;opacity:.58;line-height:1.6;margin-top:12px}.ok{color:#7dffb2}.err{color:#ff8f8f}.name{font-weight:700}.sep{height:1px;background:#22334b;margin:20px 0}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top"><div class="brand">LINKCAM</div><div class="pill">iPad ↔ iPad</div></div>
+<main>
+<h1>LINKCAM</h1>
+<div class="sub">スマホ・iPadをカメラにして、PC・スマホ・タブレットから見る</div>
 
-  <section id="home" class="card">
-    <h2>端末を選択</h2>
-    <div class="sub">このiPadをカメラとして登録するか、別の端末からカメラ映像を見ます。</div>
-    <div class="grid">
-      <button class="btn" onclick="openCameraSetup()">このiPadをカメラにする</button>
-      <button class="btn secondary" onclick="openViewer()">この端末で見る</button>
-    </div>
-  </section>
-
-  <section id="cameraSetup" class="card hidden">
-    <button class="btn secondary back" onclick="goHome()">← 戻る</button>
-    <h2>カメラ登録</h2>
-    <div class="sub">最初だけ端末名を登録します。名前はこのブラウザに保存されます。</div>
-    <div class="field"><label>端末名</label><input id="camName" maxlength="30" placeholder="例：iPad・リビング"></div>
-    <div class="grid">
-      <button class="btn" onclick="startCamera()">登録して開始</button>
-      <button class="btn secondary" onclick="clearCameraRegistration()">登録を消す</button>
-    </div>
-    <div id="camStatus" class="status">未起動</div>
-    <div id="camCode" class="code hidden"></div>
-    <button id="copyCode" class="btn secondary hidden" onclick="copyCameraCode()">接続コードをコピー</button>
-    <div class="cameraBlank"><div>カメラ待機中<br><small>映像はこのiPadには表示しません</small></div></div>
-    <div class="note">カメラ映像を送るには、このページを開いたままにしてください。iPadOSのスリープやSafariのバックグラウンド動作によって接続が止まる場合があります。カメラ・マイクの許可表示など、端末のシステム表示は消せません。</div>
-  </section>
-
-  <section id="viewer" class="card hidden">
-    <button class="btn secondary back" onclick="goHome()">← 戻る</button>
-    <h2>カメラを見る</h2>
-    <div class="sub">カメラ側に表示された接続コードを入力してください。</div>
-    <div class="field"><label>接続コード</label><input id="peerId" autocomplete="off" placeholder="カメラ側のコード"></div>
-    <div class="grid">
-      <button class="btn" onclick="connectViewer()">接続</button>
-      <button class="btn secondary" onclick="disconnectViewer()">切断</button>
-    </div>
-    <div id="viewStatus" class="status">未接続</div>
-    <div class="videoWrap"><video id="remote" class="video" autoplay playsinline controls></video></div>
-    <div class="note">接続コードはカメラ端末のセッションごとに変わることがあります。現在の方式では、コード入力で直接接続します。</div>
-  </section>
-
-  <section id="saved" class="card hidden">
-    <h2>この端末の登録情報</h2>
-    <div id="savedInfo" class="list"></div>
-  </section>
+<div id="setup" class="card">
+<h2>端末を選択</h2>
+<button onclick="showCamera()">この端末をカメラにする</button>
+<button class="secondary" onclick="showViewer()">この端末でカメラを見る</button>
 </div>
+
+<div id="camera" class="card hidden">
+<h2>カメラ登録</h2>
+<input id="camName" placeholder="例：スマホ・リビング" autocomplete="off">
+<button id="startBtn" onclick="startCamera()">登録してカメラ開始</button>
+<div id="camStatus" class="status"></div>
+<div id="myCode" class="code hidden"></div>
+<button id="copyBtn" class="secondary hidden" onclick="copyId()">接続コードをコピー</button>
+<div class="small">このページを開いたままにしてください。画面ロックやバックグラウンド移行時は、端末の仕様でカメラが停止する場合があります。</div>
+</div>
+
+<div id="viewer" class="card hidden">
+<h2>カメラを見る</h2>
+<input id="peerId" placeholder="カメラ側の接続コード" autocomplete="off">
+<button id="connectBtn" onclick="connectViewer()">接続</button>
+<div id="viewStatus" class="status"></div>
+<video id="remote" class="video" autoplay playsinline></video>
+<div class="small">カメラ側に表示された接続コードを入力してください。</div>
+</div>
+</main>
+
 <script>
-const KEY='linkcam-camera-registration-v1';
-let peer=null,stream=null,currentCall=null,cameraCode='';
+let peer=null, stream=null, activeCalls=[];
 const $=id=>document.getElementById(id);
-function goHome(){stopAll();$('home').classList.remove('hidden');$('cameraSetup').classList.add('hidden');$('viewer').classList.add('hidden');$('saved').classList.add('hidden')}
-function openCameraSetup(){stopAll();$('home').classList.add('hidden');$('cameraSetup').classList.remove('hidden');$('viewer').classList.add('hidden');const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved)$('camName').value=saved.name||''}
-function openViewer(){stopAll();$('home').classList.add('hidden');$('cameraSetup').classList.add('hidden');$('viewer').classList.remove('hidden');$('saved').classList.add('hidden')}
-function status(el,msg,cls=''){$(el).innerHTML=msg;$(el).className='status '+cls}
-function makePeer(){return new Peer(undefined,{debug:1,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'}]}})}
+const iceConfig={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+
+function showCamera(){ $('setup').classList.add('hidden'); $('camera').classList.remove('hidden'); $('camName').value=localStorage.getItem('linkcam-camera-name')||''; }
+function showViewer(){ $('setup').classList.add('hidden'); $('viewer').classList.remove('hidden'); }
+function setStatus(el,msg,kind=''){ el.textContent=msg; el.className='status '+kind; }
+
+function makePeer(){
+  return new Peer({config:iceConfig,debug:1});
+}
+
 async function startCamera(){
- const name=$('camName').value.trim()||'iPad';
- localStorage.setItem(KEY,JSON.stringify({name,registeredAt:new Date().toISOString()}));
- status('camStatus','カメラの許可を確認しています…');
- try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});}
- catch(e){status('camStatus','カメラを使用できません。Safariのカメラ許可を確認してください。<br><small>'+escapeHtml(e.message||'permission error')+'</small>','err');return}
- peer=makePeer();
- peer.on('open',id=>{cameraCode=id;$('camCode').textContent=id;$('camCode').classList.remove('hidden');$('copyCode').classList.remove('hidden');status('camStatus','<b>'+escapeHtml(name)+'</b> としてカメラ待機中','ok')});
- peer.on('call',call=>{if(!stream){call.close();return}if(currentCall)currentCall.close();currentCall=call;call.answer(stream);call.on('close',()=>{if(currentCall===call){currentCall=null;status('camStatus','接続待機中','ok')}});call.on('error',()=>status('camStatus','映像接続でエラーが発生しました。','err'))});
- peer.on('disconnected',()=>status('camStatus','通信サーバーから切断されました。再接続を試しています…','warn'));
- peer.on('error',e=>status('camStatus','接続エラー：'+escapeHtml(e.type||'unknown'),'err'));
+  const name=$('camName').value.trim()||'カメラ端末';
+  localStorage.setItem('linkcam-camera-name',name);
+  $('startBtn').disabled=true;
+  setStatus($('camStatus'),'カメラを起動しています…');
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
+  }catch(e){
+    $('startBtn').disabled=false;
+    setStatus($('camStatus'),'カメラを使用できません: '+(e.message||e.name),'err');
+    return;
+  }
+  peer=makePeer();
+  peer.on('open',id=>{
+    $('myCode').textContent=id;
+    $('myCode').classList.remove('hidden');
+    $('copyBtn').classList.remove('hidden');
+    setStatus($('camStatus'),name+' として待機中。PC側からこのコードで接続してください。','ok');
+  });
+  peer.on('call',call=>{
+    try{
+      call.answer(stream);
+      activeCalls.push(call);
+      call.on('close',()=>{activeCalls=activeCalls.filter(x=>x!==call)});
+      call.on('error',()=>{});
+    }catch(e){setStatus($('camStatus'),'接続処理でエラーが発生しました。','err')}
+  });
+  peer.on('disconnected',()=>{setStatus($('camStatus'),'サーバーから切断されました。再接続中…','err');try{peer.reconnect()}catch(e){}});
+  peer.on('error',e=>{setStatus($('camStatus'),'接続エラー: '+(e.type||e.message),'err')});
 }
+
+function createDummyStream(){
+  const canvas=document.createElement('canvas');canvas.width=2;canvas.height=2;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#000';ctx.fillRect(0,0,2,2);
+  return canvas.captureStream(1);
+}
+
 function connectViewer(){
- const id=$('peerId').value.trim();if(!id){status('viewStatus','接続コードを入力してください。','warn');return}
- disconnectViewer(false);status('viewStatus','接続しています…');
- peer=makePeer();
- peer.on('open',()=>{try{currentCall=peer.call(id,new MediaStream());}catch(e){status('viewStatus','接続開始に失敗しました。','err');return}
-  if(!currentCall){status('viewStatus','カメラが見つかりません。','err');return}
-  currentCall.on('stream',s=>{$('remote').srcObject=s;$('remote').play().catch(()=>{});status('viewStatus','映像に接続しました','ok')});
-  currentCall.on('close',()=>status('viewStatus','切断されました','warn'));
-  currentCall.on('error',e=>status('viewStatus','映像接続エラー：'+escapeHtml(e.type||'unknown'),'err'));
- });
- peer.on('error',e=>status('viewStatus','接続エラー：'+escapeHtml(e.type||'unknown'),'err'));
+  const id=$('peerId').value.trim();
+  if(!id){setStatus($('viewStatus'),'接続コードを入力してください。','err');return}
+  if(peer){try{peer.destroy()}catch(e){}}
+  $('connectBtn').disabled=true;
+  $('remote').srcObject=null;
+  setStatus($('viewStatus'),'カメラに接続しています…');
+  peer=makePeer();
+  peer.on('open',()=>{
+    // PeerJSの発信側にも映像トラックを持たせ、Safari/Chrome/PC間でWebRTCの映像受信を安定させる。
+    const dummy=createDummyStream();
+    const call=peer.call(id,dummy);
+    if(!call){$('connectBtn').disabled=false;setStatus($('viewStatus'),'接続を開始できませんでした。','err');return}
+    call.on('stream',remoteStream=>{
+      $('remote').srcObject=remoteStream;
+      $('remote').play().catch(()=>{});
+      setStatus($('viewStatus'),'接続しました。カメラ映像を受信中です。','ok');
+      $('connectBtn').disabled=false;
+    });
+    call.on('close',()=>{setStatus($('viewStatus'),'カメラとの接続が切れました。','err');$('connectBtn').disabled=false});
+    call.on('error',e=>{setStatus($('viewStatus'),'接続エラー: '+(e.type||e.message),'err');$('connectBtn').disabled=false});
+  });
+  peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}});
+  peer.on('error',e=>{
+    let msg=e.type||e.message||'unknown';
+    if(msg==='peer-unavailable') msg='カメラ端末が見つかりません。カメラ側のページが開いたままか、接続コードが正しいか確認してください。';
+    setStatus($('viewStatus'),'接続エラー: '+msg,'err');
+    $('connectBtn').disabled=false;
+  });
 }
-function disconnectViewer(update=true){if(currentCall){try{currentCall.close()}catch(e){}currentCall=null}if(peer){try{peer.destroy()}catch(e){}peer=null}if($('remote'))$('remote').srcObject=null;if(update)status('viewStatus','切断しました')}
-function stopAll(){if(currentCall){try{currentCall.close()}catch(e){}currentCall=null}if(peer){try{peer.destroy()}catch(e){}peer=null}if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}cameraCode='';$('camCode').classList.add('hidden');$('copyCode').classList.add('hidden');if($('remote'))$('remote').srcObject=null}
-async function copyCameraCode(){if(!cameraCode)return;try{await navigator.clipboard.writeText(cameraCode);status('camStatus','接続コードをコピーしました。','ok')}catch(e){status('camStatus','コードを長押ししてコピーしてください。','warn')}}
-function clearCameraRegistration(){localStorage.removeItem(KEY);$('camName').value='';status('camStatus','登録を削除しました')}
-function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
-window.addEventListener('beforeunload',stopAll);
+
+async function copyId(){
+  const id=$('myCode').textContent;
+  try{await navigator.clipboard.writeText(id);setStatus($('camStatus'),'接続コードをコピーしました。','ok')}catch(e){setStatus($('camStatus'),'コピーできませんでした。コードを長押し/選択してコピーしてください。','err')}
+}
 </script>
 </body>
 </html>
