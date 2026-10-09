@@ -65,6 +65,7 @@ const firebaseConfig = {
 };
 
 let db, auth, uid, localStream, pc, role, roomId, unsubscribe;
+let initPromise;
 const ICE = [{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}];
 
 function configured(){return !Object.values(firebaseConfig).some(v=>String(v).startsWith("YOUR_"))}
@@ -72,11 +73,15 @@ function show(id){document.querySelectorAll("section").forEach(x=>x.classList.ad
 function setStatus(id,msg,err=false){const e=document.getElementById(id);e.textContent=msg;e.className="small "+(err?"err":"ok")}
 
 async function init(){
- if(!configured()){setStatus("viewStatus","Firebase設定がまだ入っていません。READMEの初回設定を行ってください。",true);return}
- firebase.initializeApp(firebaseConfig); auth=firebase.auth(); db=firebase.firestore();
- await auth.signInAnonymously(); uid=auth.currentUser.uid;
+ if(!configured()) throw new Error("Firebase設定がまだ入っていません。READMEの初回設定を行ってください。");
+ if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+ auth=firebase.auth(); db=firebase.firestore();
+ if(!auth.currentUser) await auth.signInAnonymously();
+ uid=auth.currentUser && auth.currentUser.uid;
+ if(!uid) throw new Error("Firebase匿名認証からユーザーIDを取得できませんでした。");
+ return uid;
 }
-init().catch(e=>console.error(e));
+initPromise=init().catch(e=>{console.error(e);setStatus("viewStatus","Firebase初期化エラー："+e.message,true);setStatus("camStatus","Firebase初期化エラー："+e.message,true);throw e;});
 
 function newId(){return crypto.randomUUID().replaceAll("-","").slice(0,20)}
 
@@ -84,6 +89,8 @@ async function startCamera(){
  if(!configured()) return setStatus("camStatus","Firebase設定が必要です。READMEを確認してください。",true);
  role="camera"; roomId=newId();
  try{
+  await initPromise;
+  if(!uid) throw new Error("FirebaseユーザーIDがありません。ページを再読み込みしてください。");
   localStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});
   const v=document.getElementById("local");v.srcObject=localStream;v.classList.remove("hidden");
   const name=document.getElementById("camName").value.trim()||"カメラ";
@@ -150,6 +157,7 @@ async function answerOffer(data){
 
 async function startScanner(){
  if(!configured()) return setStatus("viewStatus","Firebase設定が必要です。READMEを確認してください。",true);
+ try{await initPromise;}catch(e){return setStatus("viewStatus","Firebase初期化エラー："+e.message,true)}
  const scanner=new Html5Qrcode("reader");
  setStatus("viewStatus","QRコードをカメラに映してください。");
  let scanned=false;
